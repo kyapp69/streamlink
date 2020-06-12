@@ -1,3 +1,4 @@
+import logging
 import re
 import sys
 import time
@@ -7,12 +8,15 @@ from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 
+log = logging.getLogger(__name__)
+
 
 class Pluzz(Plugin):
     GEO_URL = 'http://geo.francetv.fr/ws/edgescape.json'
     API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}'
     TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
-    SWF_PLAYER_URL = 'https://staticftv-a.akamaihd.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer.akamai-7301b6035a43c4e29b7935c9c36771d2.swf'
+    SWF_PLAYER_URL = 'https://staticftv-a.akamaihd.net/player/bower_components/player_flash/dist/' \
+                     'FranceTVNVPVFlashPlayer.akamai-7301b6035a43c4e29b7935c9c36771d2.swf'
 
     _url_re = re.compile(r'''
         https?://(
@@ -20,7 +24,7 @@ class Pluzz(Plugin):
             www\.(ludo|zouzous)\.fr/heros/[\w-]+ |
             (.+\.)?francetvinfo\.fr)
     ''', re.VERBOSE)
-    _pluzz_video_id_re = re.compile(r'data-main-video="(?P<video_id>.+?)"')
+    _pluzz_video_id_re = re.compile(r'''(?P<q>["']*)videoId(?P=q):\s*["'](?P<video_id>[^"']+)["']''')
     _jeunesse_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
     _sport_video_id_re = re.compile(r'data-video="(?P<video_id>.+?)"')
     _embed_video_id_re = re.compile(r'href="http://videos\.francetv\.fr/video/(?P<video_id>.+?)(?:@.+?)?"')
@@ -92,13 +96,14 @@ class Pluzz(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        return Pluzz._url_re.match(url)
+        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         # Retrieve geolocation data
         res = self.session.http.get(self.GEO_URL)
         geo = self.session.http.json(res, schema=self._geo_schema)
         country_code = geo['reponse']['geo_info']['country_code']
+        log.debug('Country: {0}'.format(country_code))
 
         # Retrieve URL page and search for video ID
         res = self.session.http.get(self.url)
@@ -113,6 +118,7 @@ class Pluzz(Plugin):
         if match is None:
             return
         video_id = match.group('video_id')
+        log.debug('Video ID: {0}'.format(video_id))
 
         res = self.session.http.get(self.API_URL.format(video_id))
         videos = self.session.http.json(res, schema=self._api_schema)
@@ -125,6 +131,7 @@ class Pluzz(Plugin):
 
         streams = []
         for video in videos['videos']:
+            log.trace('{0!r}'.format(video))
             video_url = video['url']
 
             # Check whether video format is available
@@ -204,13 +211,13 @@ class Pluzz(Plugin):
                 yield stream
 
         if offline:
-            self.logger.error('Failed to access stream, may be due to offline content')
+            log.error('Failed to access stream, may be due to offline content')
         if geolocked:
-            self.logger.error('Failed to access stream, may be due to geo-restricted content')
+            log.error('Failed to access stream, may be due to geo-restricted content')
         if drm:
-            self.logger.error('Failed to access stream, may be due to DRM-protected content')
+            log.error('Failed to access stream, may be due to DRM-protected content')
         if expired:
-            self.logger.error('Failed to access stream, may be due to expired content')
+            log.error('Failed to access stream, may be due to expired content')
 
 
 __plugin__ = Pluzz

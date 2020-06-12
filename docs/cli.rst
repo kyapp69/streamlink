@@ -6,9 +6,9 @@ Command-Line Interface
 Tutorial
 --------
 
-Streamlink is command-line application, this means the commands described
-here should be typed into a terminal. On Windows this means you should open
-the `command prompt`_ or `PowerShell`_, on Mac OS X open the `Terminal`_ app
+Streamlink is a command-line application, which means that the commands described
+here should be typed into a terminal. On Windows, you have to open either the
+`command prompt`_ or the `PowerShell`_, on macOS open the `Terminal`_ app
 and if you're on Linux or BSD you probably already know the drill.
 
 The way Streamlink works is that it's only a means to extract and transport
@@ -17,7 +17,7 @@ works best with `VLC`_ or `mpv`_, which are also cross-platform, but other playe
 may be compatible too, see the :ref:`Players` page for a complete overview.
 
 Now to get into actually using Streamlink, let's say you want to watch the
-stream located on http://twitch.tv/day9tv, you start off by telling Streamlink
+stream located on twitch.tv/day9tv, you start off by telling Streamlink
 where to attempt to extract streams from. This is done by giving the URL to the
 command :command:`streamlink` as the first argument:
 
@@ -29,7 +29,7 @@ command :command:`streamlink` as the first argument:
 
 
 .. note::
-    You don't need to include the protocol when dealing with HTTP URLs,
+    You don't need to include the protocol when dealing with HTTP(s) URLs,
     e.g. just ``twitch.tv/day9tv`` is enough and quicker to type.
 
 
@@ -49,20 +49,20 @@ even on Windows.
     Available streams: 180p (worst), 272p, 408p, 554p, 818p, 1744p (best)
 
 
-To select a stream and start playback, we simply add the stream name as a second
+To select a stream and start playback, simply add the stream name as a second
 argument to the :command:`streamlink` command:
 
 .. sourcecode:: console
 
-    $ streamlink twitch.tv/day9tv source
+    $ streamlink twitch.tv/day9tv 1080p60
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
-    [cli][info] Opening stream: source (hls)
+    [cli][info] Opening stream: 1080p60 (hls)
     [cli][info] Starting player: vlc
 
 
 The stream you chose should now be playing in the player. It's a common use case
-to just want start the highest quality stream and not be bothered with what it's
-named. To do this just specify ``best`` as the stream name and Streamlink will
+to just want to start the highest quality stream and not be bothered with what it's
+named. To do this, just specify ``best`` as the stream name and Streamlink will
 attempt to rank the streams and open the one of highest quality. You can also
 specify ``worst`` to get the lowest quality.
 
@@ -140,9 +140,6 @@ Example
     player=mpv --cache 2048
     player-no-close
 
-    # Authenticate with Twitch
-    twitch-oauth-token=mytoken
-
 .. note::
     Full player paths are supported via configuration file options such as
     ``player="C:\mpv-x86_64\mpv"``
@@ -175,25 +172,6 @@ the name of each built-in plugin.
 
 Plugin specific usage
 ---------------------
-
-Authenticating with Twitch
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-It's possible to access subscription content on Twitch by giving Streamlink
-access to your account.
-
-Authentication is done by creating an OAuth token that Streamlink will
-use to access your account. It's done like this:
-
-.. sourcecode:: console
-
-    $ streamlink --twitch-oauth-authenticate
-
-
-This will open a web browser where Twitch will ask you if you want to give
-Streamlink permission to access your account, then forwards you to a page
-with further instructions on how to use it.
-
 
 Authenticating with Crunchyroll
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
